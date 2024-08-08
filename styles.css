@@ -1,0 +1,40 @@
+body{
+  height: 100vh;
+  font-family: Poppins;
+  text-align: center;
+}
+.container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f0f0f0;
+}
+button{
+  padding: 20px;
+  font-family: 'Raleway';
+  font-weight: 1000;
+  font-size: 1rem;
+  border-radius: 5px;
+  background-color: rgb(0, 221, 99);
+  color: white;
+  box-shadow: 5px 5px rgba(0, 0, 0, 0.466);
+  margin-right: 20px;
+}
+button:active{
+  transform: scale(1.1);
+
+  transition-duration: 0.1s;
+  transition-property: all;
+  transition-timing-function: ease-in-out;
+}
+p:first-of-type,input{
+  display:inline;
+}
+input{
+  font-family: monospace;
+  background: linear-gradient(rgb(97, 97, 97),rgb(240, 194, 194));
+  height: 2rem;
+  color: white;
+  font-weight: bold;
+  padding: 5px;
+}
