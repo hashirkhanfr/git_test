@@ -20,5 +20,5 @@ function calculateSquares(){
     }
 }
 
-calculateButton.addEventListener("click",calculateSquares());
+calculateButton.addEventListener("click",calculateSquares);
 clearButton.addEventListener("click",() => {paragraph.innerHTML="Cleared"});
