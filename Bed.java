@@ -1,32 +1,44 @@
-package trial1;
+package trial2claude;
 
-import java.io.*;
-import java.util.Random;
-
-
-// --- Bed Class ---
 public class Bed {
+    private String id;
     private String type;
-    private boolean isOccupied;
-    private Patient patient;
-
-    public Bed(String type) {
+    private Patient currentPatient;
+    private boolean occupied;
+    private double totalOccupiedTime;
+    private double lastOccupiedStartTime;
+    
+    public Bed(String id, String type) {
+        this.id = id;
         this.type = type;
-        this.isOccupied = false;
-        this.patient = null;
+        this.occupied = false;
+        this.totalOccupiedTime = 0;
+        this.lastOccupiedStartTime = 0;
     }
-
-    public boolean isOccupied() { return isOccupied; }
+    
+    public void assignPatient(Patient patient, double currentTime) {
+        this.currentPatient = patient;
+        this.occupied = true;
+        this.lastOccupiedStartTime = currentTime;
+        patient.setAssignedBedId(id);
+    }
+    
+    public void releasePatient(double currentTime) {
+        if (occupied) {
+            totalOccupiedTime += (currentTime - lastOccupiedStartTime);
+            currentPatient.setAssignedBedId(null);
+            currentPatient = null;
+            occupied = false;
+        }
+    }
+    
+    public double getUtilization(double totalTime) {
+        return totalOccupiedTime / totalTime;
+    }
+    
+    // Getters
+    public String getId() { return id; }
     public String getType() { return type; }
-    public Patient getPatient() { return patient; }
-
-    public void assignPatient(Patient patient) {
-        this.patient = patient;
-        this.isOccupied = true;
-    }
-
-    public void releasePatient() {
-        this.patient = null;
-        this.isOccupied = false;
-    }
+    public Patient getCurrentPatient() { return currentPatient; }
+    public boolean isOccupied() { return occupied; }
 }

@@ -9,6 +9,7 @@ public class HospitalEDGui {
     int patientID = 0;
     private JFrame frame;
     private JTextArea resultArea;
+    private JTextArea simulationTimeArea; // New text area for simulation time
     private JTextField simulationDurationField;
     private JTextField resuscitationBedsField, acuteBedsField, subacuteBedsField, minorOpBedsField;
     private JTextField consultantsField, registrarsField, seniorResidentsField, juniorResidentsField, internsField;
@@ -33,7 +34,7 @@ public class HospitalEDGui {
 
     private void initialize() {
         frame = new JFrame();
-        frame.setBounds(100, 100, 700, 550);
+        frame.setBounds(100, 100, 700, 600); // Increased height to fit simulation time area
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setLayout(null);
 
@@ -82,6 +83,14 @@ public class HospitalEDGui {
         JScrollPane scrollPane = new JScrollPane(resultArea);
         scrollPane.setBounds(160, 390, 500, 100);
         frame.getContentPane().add(scrollPane);
+
+        // Simulation Time Area
+        simulationTimeArea = new JTextArea();
+        simulationTimeArea.setBounds(160, 500, 500, 30); // Set position below the result area
+        simulationTimeArea.setEditable(false); // Make it non-editable
+        JScrollPane timeScrollPane = new JScrollPane(simulationTimeArea);
+        timeScrollPane.setBounds(160, 500, 500, 30); // Adjust the position and size
+        frame.getContentPane().add(timeScrollPane);
 
         // Start Simulation Button ActionListener
         startSimulationButton.addActionListener(new ActionListener() {
@@ -202,7 +211,7 @@ public class HospitalEDGui {
             updateProgressBar(progress);
 
             // 4. Update the GUI with current simulation time
-            updateResultArea("Simulation Time: " + currentTime + " seconds");
+            updateSimulationTime(currentTime); // Update simulation time in the separate area
 
             // Sleep for a short period to slow down the simulation for visibility
             try {
@@ -230,6 +239,16 @@ public class HospitalEDGui {
             @Override
             public void run() {
                 resultArea.append(text + "\n");
+            }
+        });
+    }
+
+    // Helper method to update the simulation time area
+    private void updateSimulationTime(final double currentTime) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                simulationTimeArea.setText("Simulation Time: " + currentTime + " seconds");
             }
         });
     }

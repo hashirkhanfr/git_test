@@ -1,13 +1,13 @@
-package trial1;
+package trial2claude;
 
 public class PatientQueue {
-    private int priority;
     private Patient[] patients;
     private int front;
     private int rear;
-    private int capacity;
     private int size;
-
+    private final int capacity;
+    private final int priority;
+    
     public PatientQueue(int priority, int capacity) {
         this.priority = priority;
         this.capacity = capacity;
@@ -16,8 +16,8 @@ public class PatientQueue {
         this.rear = -1;
         this.size = 0;
     }
-
-    public void addPatient(Patient patient) {
+    
+    public void enqueue(Patient patient) {
         if (size == capacity) {
             throw new IllegalStateException("Queue is full");
         }
@@ -25,24 +25,23 @@ public class PatientQueue {
         patients[rear] = patient;
         size++;
     }
-
-    public Patient removePatient() {
+    
+    public Patient dequeue() {
         if (size == 0) {
-            throw new IllegalStateException("Queue is empty");
+            return null;
         }
         Patient patient = patients[front];
         front = (front + 1) % capacity;
         size--;
         return patient;
     }
-
-    public boolean isEmpty() {
-        return size == 0;
+    
+    public Patient peek() {
+        return size == 0 ? null : patients[front];
     }
-
-    public int size() {
-        return size;
-    }
-
+    
+    public boolean isEmpty() { return size == 0; }
+    public boolean isFull() { return size == capacity; }
+    public int getSize() { return size; }
     public int getPriority() { return priority; }
 }
