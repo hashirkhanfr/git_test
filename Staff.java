@@ -1,11 +1,12 @@
-package trial2claude;
+package trial3;
+
+import java.util.ArrayList;
 
 public class Staff {
     private String id;
     private String role;
     private int maxPatients;
-    Patient[] assignedPatients;
-    private int patientCount;
+    private ArrayList<Patient> assignedPatients;
     private double totalWorkTime;
     private double lastWorkStartTime;
     
@@ -13,41 +14,31 @@ public class Staff {
         this.id = id;
         this.role = role;
         this.maxPatients = maxPatients;
-        this.assignedPatients = new Patient[maxPatients];
-        this.patientCount = 0;
+        this.assignedPatients = new ArrayList<>();
         this.totalWorkTime = 0;
         this.lastWorkStartTime = 0;
     }
     
     public boolean canTakePatient() {
-        return patientCount < maxPatients;
+        return assignedPatients.size() < maxPatients;
     }
     
     public void assignPatient(Patient patient, double currentTime) {
-        if (patientCount < maxPatients) {
-            if (patientCount == 0) {
+        if (assignedPatients.size() < maxPatients) {
+            if (assignedPatients.isEmpty()) {
                 lastWorkStartTime = currentTime;
             }
-            assignedPatients[patientCount++] = patient;
+            assignedPatients.add(patient);
         }
     }
     
     public void releasePatient(Patient patient, double currentTime) {
-        for (int i = 0; i < patientCount; i++) {
-            if (assignedPatients[i] == patient) {
-                // Shift remaining patients
-                for (int j = i; j < patientCount - 1; j++) {
-                    assignedPatients[j] = assignedPatients[j + 1];
-                }
-                patientCount--;
-                
-                if (patientCount == 0) {
-                    totalWorkTime += (currentTime - lastWorkStartTime);
-                }
-                break;
-            }
+        assignedPatients.remove(patient);
+        if (assignedPatients.isEmpty()) {
+            totalWorkTime += (currentTime - lastWorkStartTime);
         }
     }
+
     
     public double getUtilization(double totalTime) {
         return totalWorkTime / totalTime;
@@ -56,5 +47,10 @@ public class Staff {
     // Getters
     public String getId() { return id; }
     public String getRole() { return role; }
-    public int getPatientCount() { return patientCount; }
+    public int getPatientCount() { return assignedPatients.size(); }
+    public ArrayList<Patient> getAssignedPatients() { return assignedPatients; }
+
+	public int getMaxPatients() {
+		return maxPatients;
+	}
 }

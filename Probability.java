@@ -1,27 +1,109 @@
-package trial2claude;
+package trial3;
 
 public class Probability {
-    private static final double E = Math.E;
-    private static final double PI = Math.PI;
     
-    public static double weibull(double x, double lambda, double k) {
+    // Weibull distribution density calculation for interarrival times
+    public static double weibull(double x, double alpha, double beta) {
         if (x < 0) return 0.0;
-        return (k / lambda) * Math.pow(x / lambda, k - 1) * Math.exp(-Math.pow(x / lambda, k));
+        double exponent = -Math.pow(x / alpha, beta);
+        return (beta / alpha) * Math.pow(x / alpha, beta - 1) * Math.exp(exponent);
     }
     
-    public static double exponential(double x, double mean) {
+    // Beta function implementation for Pearson VI distribution
+    public static double betaFunction(double p, double q) {
+        return Math.exp(gammaLn(p) + gammaLn(q) - gammaLn(p + q));
+    }
+    
+    // Gamma function logarithm implementation
+    public static double gammaLn(double x) {
+        double[] coef = {76.18009172947146, -86.50532032941677,
+                        24.01409824083091, -1.231739572450155,
+                        0.1208650973866179E-2, -0.5395239384953E-5};
+        double stp = 2.5066282746310005;
+        double ser = 1.000000000190015;
+        double temp = x + 5.5;
+        temp = (x + 0.5) * Math.log(temp) - temp;
+        for (int j = 0; j < 6; j++) {
+            ser += coef[j] / (x + j + 1.0);
+        }
+        return temp + Math.log(stp * ser / x);
+    }
+    
+    // Pearson VI density calculation for treatment times
+    public static double pearsonVI(double x, double beta, double alpha, double p, double q) {
         if (x < 0) return 0.0;
-        double lambda = 1.0 / mean;
-        return lambda * Math.exp(-lambda * x);
+        double betaVal = betaFunction(p, q);
+        return (Math.pow(x, alpha - 1) / Math.pow(beta, alpha) / betaVal) *
+               Math.pow(1 + (x / beta), -(p + q));
     }
     
-    public static double generateWeibullRandom(double lambda, double k) {
-        double u = Math.random();
-        return lambda * Math.pow(-Math.log(1 - u), 1.0/k);
+    public static double pearsonVI(double x, double beta, double p, double q) {
+        if (x <= 0) {
+            return 0; // Probability density is 0 for x <= 0
+        }
+        
+        // Implementation following the formula:
+        // f(x) = (x/β)^(p-1) / (β * [1 + (x/β)]^(p+q) * B(p,q))
+        double xOverBeta = x / beta;
+        double numerator = Math.pow(xOverBeta, p - 1);
+        double denominator = beta * Math.pow(1 + xOverBeta, p + q) * betaFunction(p, q);
+        
+        return numerator / denominator;
     }
     
-    public static double generateExponentialRandom(double mean) {
+    // Post-discharge time density (Exponential distribution)
+    public static double pddt(double x, double mean) {
+        if (x < 0) return 0.0;
+        double mu = 1.0 / mean; 
+        return mu * Math.exp(-mu * x);
+    }
+    
+    // Generate random treatment time using Pearson VI distribution
+    public static double generateTreatmentTime(double currentTime, int category) {
+        // Base parameters from the formula
+        double beta = 355;   // Scale parameter
+        double p = 1.64;     // First shape parameter (previously incorrectly set as alpha)
+        double q = 5.72;     // Second shape parameter
+        
+        // Adjust parameters based on category
+        switch(category) {
+            case 1: // Critical cases need longer treatment
+                beta *= 1.5;
+                break;
+            case 2:
+                beta *= 1.2;
+                break;
+            case 3:
+                // Use default parameters
+                break;
+            case 4:
+            case 5: // Minor cases need less time
+                beta *= 0.7;
+                break;
+        }
+        
+        // Use rejection sampling to generate random value
+        double maxY = pearsonVI(beta, beta, p, q);
+        while(true) {
+            double x = Math.random() * beta * 3; // Range: [0, 3*beta]
+            double y = Math.random() * maxY;
+            if (y <= pearsonVI(x, beta, p, q)) {
+                return x;
+            }
+        }
+    }
+    
+    // Generate random post-treatment time
+    public static double generatePostTreatmentTime(double currentTime) {
+        double mean = 156; // From C++ implementation
+        return -mean * Math.log(1 - Math.random()); // Inverse transform sampling
+    }
+    
+    // Generate inter arrival time using Weibull distribution
+    public static double generateInterarrivalTime(double currentTime) {
+        double alpha = 180; // Scale parameter
+        double beta = 0.914;      // Shape parameter
         double u = Math.random();
-        return -mean * Math.log(1 - u);
+        return alpha * Math.pow(-Math.log(1 - u), 1.0/beta);
     }
 }

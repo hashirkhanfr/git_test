@@ -1,121 +1,132 @@
-package trial2claude;
+package trial3;
+
+import java.util.ArrayList;
 
 public class Hospital {
-    private static final int MAX_QUEUES = 5;
-    private static final int QUEUE_CAPACITY = 100;
+    private final int MAX_QUEUES = 5;
     
-    private PatientQueue[] queues;
-    private Bed[] beds;
-    private Staff[] staff;
+    private ArrayList<PatientQueue> queues;
+    private ArrayList<Bed> beds;
+    private ArrayList<Staff> staff;
     private SimulationMetrics metrics;
     private double currentTime;
     private double simulationDuration;
     private int nextPatientId;
+  
+    private double nextArrivalTime;
     
-    public Hospital(double simulationDuration, int bedCount, int staffCount) {
+	private HospitalSimulationGUI gui;
+    private static final double INTERARRIVAL_SCALER = 10.0;
+    
+    public Hospital(double simulationDuration, int bedCount, int staffCount, HospitalSimulationGUI gui) {
         this.simulationDuration = simulationDuration;
         this.currentTime = 0;
         this.nextPatientId = 1;
+        this.gui = gui;  // Store GUI reference
         
         // Initialize queues
-        this.queues = new PatientQueue[MAX_QUEUES];
+        this.queues = new ArrayList<>();
         for (int i = 0; i < MAX_QUEUES; i++) {
-            queues[i] = new PatientQueue(i + 1, QUEUE_CAPACITY);
+            queues.add(new PatientQueue(i + 1));
         }
         
         // Initialize beds
-        this.beds = new Bed[bedCount];
+        this.beds = new ArrayList<>();
         for (int i = 0; i < bedCount; i++) {
             String type = i < bedCount/4 ? "Resuscitation" :
                          i < bedCount/2 ? "Acute" :
                          i < 3*bedCount/4 ? "Subacute" : "Minor";
-            beds[i] = new Bed("BED_" + (i+1), type);
+            beds.add(new Bed(i+1, type));
         }
         
         // Initialize staff
-        this.staff = new Staff[staffCount];
+        this.staff = new ArrayList<>();
         for (int i = 0; i < staffCount; i++) {
-            String role = i < staffCount/5 ? "Consultant" :
-                         i < 2*staffCount/5 ? "Registrar" :
-                         i < 3*staffCount/5 ? "Senior Resident" :
-                         i < 4*staffCount/5 ? "Junior Resident" : "Intern";
-            int maxPatients = role.equals("Consultant") ? 2 :
-                            role.equals("Registrar") ? 3 :
-                            role.equals("Senior Resident") ? 4 :
-                            role.equals("Junior Resident") ? 4 : 5;
-            staff[i] = new Staff("STAFF_" + (i+1), role, maxPatients);
+        	String role;
+        	if (i < staffCount / 5)            role = "Consultant";
+        	else if (i < 2 * staffCount / 5)   role = "Registrar";
+        	else if (i < 3 * staffCount / 5)   role = "Senior Resident";
+        	else if (i < 4 * staffCount / 5)   role = "Junior Resident";
+        	else                               role = "Intern";
+        	int maxPatients;
+        	if (role.equals("Consultant"))             maxPatients = 2;
+        	else if (role.equals("Registrar"))         maxPatients = 3;
+        	else if (role.equals("Senior Resident"))   maxPatients = 4;
+        	else if (role.equals("Junior Resident"))   maxPatients = 4;
+        	else                                       maxPatients = 5;
+        	
+            staff.add(new Staff("STAFF-" + (i+1), role, maxPatients));
         }
         
-        this.metrics = new SimulationMetrics();
+        this.metrics = new SimulationMetrics(beds, staff);
     }
     
     public void runSimulation() {
         while (currentTime < simulationDuration) {
-            // Generate new patients
-            if (shouldGenerateNewPatient()) {
+            // Check if it's time for a new patient arrival
+            if (currentTime >= nextArrivalTime) {
                 generatePatient();
+                
+                // Schedule next arrival using Weibull distribution
+                double interarrivalTime = Probability.generateInterarrivalTime(currentTime) * INTERARRIVAL_SCALER;
+                // Ensure minimum gap of 1 second between arrivals
+                nextArrivalTime = currentTime + Math.max(1.0, interarrivalTime);
             }
             
-            // Process queues and assign beds
             processQueues();
-            
-            // Update patient treatment progress
             updateTreatments();
-            
-            // Advance time
             currentTime += 1;
         }
         
-        // Generate final report
-        System.out.println(metrics.generateReport());
-    }
-    
-    private boolean shouldGenerateNewPatient() {
-        // Use Weibull distribution to determine if new patient should arrive
-        return Math.random() < Probability.weibull(currentTime % 60, 30, 2);
+        System.out.println(generateReport());
     }
     
     private void generatePatient() {
-        // Generate category based on empirical distribution
         int category = generatePatientCategory();
-        Patient patient = new Patient(nextPatientId++, category, currentTime);
+        Patient patient = new Patient(nextPatientId, category, currentTime);
         
-        // Add appropriate diagnostic studies
+        // Update GUI with new patient arrival
+        if (gui != null) {
+            gui.updatePatientArrival(nextPatientId);
+            gui.updateCategoryAssignment(nextPatientId, category);
+        }
+        
+        // Add diagnostic studies based on severity
         if (category <= 3) {
-            patient.addDiagnosticStudy("Blood Work", 
-                Probability.generateExponentialRandom(30)); // 30 min mean duration
+            double bloodworkTime = Probability.generatePostTreatmentTime(currentTime) * 0.2;
+            patient.addDiagnosticStudy("Blood Work", bloodworkTime);
+            
             if (category <= 2) {
-                patient.addDiagnosticStudy("Imaging", 
-                    Probability.generateExponentialRandom(45)); // 45 min mean duration
+                double imagingTime = Probability.generatePostTreatmentTime(currentTime) * 0.3;
+                patient.addDiagnosticStudy("Imaging", imagingTime);
             }
         }
         
-        // Add to appropriate queue
-        queues[category - 1].enqueue(patient);
+        queues.get(category - 1).enqueue(patient);
+        nextPatientId++;
     }
     
     private int generatePatientCategory() {
         double rand = Math.random();
-        if (rand < 0.05) return 1;      // 5% category 1 (most urgent)
-        if (rand < 0.20) return 2;      // 15% category 2
-        if (rand < 0.50) return 3;      // 30% category 3
-        if (rand < 0.80) return 4;      // 30% category 4
-        return 5;                       // 20% category 5 (least urgent)
+        // Distribution based on typical ED triage patterns
+        if (rand < 0.05) return 1;      // 5% critical cases
+        if (rand < 0.20) return 2;      // 15% acute cases
+        if (rand < 0.50) return 3;      // 30% subacute cases
+        if (rand < 0.80) return 4;      // 30% minor cases
+        return 5;                        // 20% non-urgent cases
     }
     
     private void processQueues() {
-        // Process queues in priority order (1 to 5)
-        for (int i = 0; i < MAX_QUEUES; i++) {
-            while (!queues[i].isEmpty()) {
-                Patient patient = queues[i].peek();
+        for (PatientQueue queue : queues) {
+            while (!queue.isEmpty()) {
+                Patient patient = queue.peek();
                 
-                // Try to assign the patient to a bed
                 if (assignPatientToBed(patient)) {
-                    queues[i].dequeue(); // Remove from queue only if successfully assigned
+                    queue.dequeue();
                     patient.setWaitTime(currentTime - patient.getArrivalTime());
                     metrics.recordPatient(patient);
-                } else {
-                    // If we couldn't assign this patient, we won't be able to assign any others in this queue
+                }
+                else {
                     break;
                 }
             }
@@ -123,41 +134,60 @@ public class Hospital {
     }
     
     private boolean assignPatientToBed(Patient patient) {
-        // First try to find an appropriate empty bed
+        // First check if we can assign appropriate staff
+        int requiredStaffCount = patient.getCategory() <= 2 ? 2 : 1;
+        int availableQualifiedStaff = countAvailableQualifiedStaff(patient.getCategory());
+        
+        if (availableQualifiedStaff < requiredStaffCount) {
+            return false; // Not enough qualified staff available
+        }
+        
         Bed assignedBed = findEmptyBed(patient.getCategory());
         
+        // Handle preemption for critical and acute patients
         if (assignedBed == null && patient.getCategory() <= 2) {
-            // For high priority patients, try preemption
             assignedBed = findPreemptableBed(patient.getCategory());
             if (assignedBed != null) {
-                // Preempt current patient
                 Patient preemptedPatient = assignedBed.getCurrentPatient();
                 preemptedPatient.setPreempted(true);
-                queues[preemptedPatient.getCategory() - 1].enqueue(preemptedPatient);
+                queues.get(preemptedPatient.getCategory() - 1).enqueue(preemptedPatient);
                 releasePatient(assignedBed);
                 metrics.recordPreemption();
             }
         }
         
         if (assignedBed != null) {
-            // Assign patient to bed and find available staff
             assignedBed.assignPatient(patient, currentTime);
+            if (gui != null) {
+                gui.updateBedAssignment(patient.getId(), assignedBed.getId());
+            }
             assignStaffToPatient(patient);
+            startDiagnosticStudies(patient);
             return true;
         }
         
         return false;
     }
     
-    private Bed findEmptyBed(int category) {
-        String requiredType = getBedTypeForCategory(category);
-        for (Bed bed : beds) {
-            if (!bed.isOccupied() && bed.getType().equals(requiredType)) {
-                return bed;
+    private int countAvailableQualifiedStaff(int category) {
+        int count = 0;
+        for (Staff member : staff) {
+            if (member.canTakePatient() && isStaffQualifiedForCategory(member, category)) {
+                count++;
             }
         }
+        return count;
+    }
+    
+    private Bed findEmptyBed(int category) {
+        String requiredType = getBedTypeForCategory(category);
+        for (Bed bed : beds)
+            if (!bed.isOccupied() && bed.getType().equals(requiredType))
+                return bed;
+        
         return null;
     }
+    
     
     private Bed findPreemptableBed(int category) {
         String requiredType = getBedTypeForCategory(category);
@@ -188,24 +218,70 @@ public class Hospital {
     }
     
     private void assignStaffToPatient(Patient patient) {
-        // Assign appropriate staff based on patient category
-        if (patient.getCategory() <= 2) {
-            assignStaffByRole(patient, "Consultant");
-            assignStaffByRole(patient, "Registrar");
-        } else if (patient.getCategory() == 3) {
-            assignStaffByRole(patient, "Senior Resident");
-            assignStaffByRole(patient, "Junior Resident");
-        } else {
-            assignStaffByRole(patient, "Junior Resident");
-            assignStaffByRole(patient, "Intern");
+        int category = patient.getCategory();
+        
+        // For Category 1-2 patients
+        if (category <= 2) {
+            // Need both senior (consultant/registrar) and junior staff
+            boolean seniorAssigned = assignStaffByRole(patient, new String[]{"Consultant", "Registrar"});
+            boolean juniorAssigned = assignStaffByRole(patient, new String[]{"Senior Resident", "Junior Resident"});
+            
+            // If we couldn't get required staff, patient must wait
+            if (!seniorAssigned || !juniorAssigned) {
+                releaseAllAssignedStaff(patient);
+                return;
+            }
+        }
+        // For Category 3-5 patients
+        else {
+            // Try to assign in order of preference
+            boolean staffAssigned = assignStaffByRole(patient, 
+                new String[]{"Senior Resident", "Junior Resident", "Intern"});
+            
+            if (!staffAssigned) {
+                return; // No suitable staff available
+            }
         }
     }
     
-    private void assignStaffByRole(Patient patient, String role) {
+    private boolean assignStaffByRole(Patient patient, String[] acceptableRoles) {
+        for (String role : acceptableRoles) {
+            for (Staff member : staff) {
+                if (member.getRole().equals(role) && member.canTakePatient() && 
+                    isStaffQualifiedForCategory(member, patient.getCategory())) {
+                    member.assignPatient(patient, currentTime);
+                    if (gui != null) {
+                        gui.updateStaffAssignment(patient.getId(), member.getId(), member.getRole());
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    private boolean isStaffQualifiedForCategory(Staff staff, int category) {
+        switch (staff.getRole()) {
+            case "Consultant":
+            case "Registrar":
+                return category <= 2; // Can only treat Category 1-2
+                
+            case "Senior Resident":
+            case "Junior Resident":
+                return true; // Can treat all categories
+                
+            case "Intern":
+                return category >= 3; // Can only treat Category 3-5
+                
+            default:
+                return false;
+        }
+    }
+    
+    private void releaseAllAssignedStaff(Patient patient) {
         for (Staff member : staff) {
-            if (member.getRole().equals(role) && member.canTakePatient()) {
-                member.assignPatient(patient, currentTime);
-                break;
+            if (member.getAssignedPatients().contains(patient)) {
+                member.releasePatient(patient, currentTime);
             }
         }
     }
@@ -214,9 +290,23 @@ public class Hospital {
         for (Bed bed : beds) {
             if (bed.isOccupied()) {
                 Patient patient = bed.getCurrentPatient();
-                if (currentTime - patient.getArrivalTime() - patient.getWaitTime() >= patient.getTreatmentTime()) {
-                    // Treatment complete, release patient
-                    releasePatient(bed);
+                
+                // Check if treatment is complete including post-treatment time
+                double totalTime = currentTime - patient.getArrivalTime() - patient.getWaitTime();
+                if (totalTime >= patient.getTotalTreatmentTime()) {
+                    // Process any remaining diagnostic studies
+                    boolean studiesComplete = true;
+                    for (DiagnosticStudy study : patient.getStudies()) {
+                        if (!study.isComplete(currentTime)) {
+                            studiesComplete = false;
+                            break;
+                        }
+                    }
+                    
+                    // Only release if treatment and all studies are complete
+                    if (studiesComplete) {
+                        releasePatient(bed);
+                    }
                 }
             }
         }
@@ -226,78 +316,121 @@ public class Hospital {
         Patient patient = bed.getCurrentPatient();
         patient.setDischargeTime(currentTime);
         
-        // Release staff assigned to this patient
         for (Staff member : staff) {
-            member.releasePatient(patient, currentTime);
+            if (member.getAssignedPatients().contains(patient)) {
+                member.releasePatient(patient, currentTime);
+            }
         }
         
-        // Release bed
         bed.releasePatient(currentTime);
     }
     
-    // Getters for metrics and current state
-    public String getCurrentState() {
-        StringBuilder state = new StringBuilder();
-        state.append("Current Time: ").append(currentTime).append("\n");
-        
-        // Queue states
-        state.append("\nQueue Status:\n");
-        for (int i = 0; i < MAX_QUEUES; i++) {
-            state.append(String.format("Category %d: %d patients waiting\n", 
-                i + 1, queues[i].getSize()));
-        }
-        
-        // Bed utilization
-        state.append("\nBed Utilization:\n");
-        int occupied = 0;
-        for (Bed bed : beds) {
-            if (bed.isOccupied()) occupied++;
-        }
-        state.append(String.format("Occupied Beds: %d/%d\n", occupied, beds.length));
-        
-        return state.toString();
-    }
-    
     public String generateReport() {
+        metrics.setCurrentTime(currentTime);  // Ensure current time is up to date
         return metrics.generateReport();
     }
     
-    public void step() {
+    public void threadStep() {
         currentTime++;
 
-        // Generate new patient arrivals
-        if (Math.random() < 0.1) { // Adjust arrival probability
-            int category = (int) (Math.random() * 5) + 1; // Random category 1-5
+        // Check for new patient arrival
+        if (Math.random() < 0.1) {
+            int category = (int) (Math.random() * 5) + 1;
             Patient newPatient = new Patient((int) currentTime, category, currentTime);
-            queues[category - 1].enqueue(newPatient);
+            queues.get(category - 1).enqueue(newPatient);
+            
+            // Update GUI for new patient arrival
+            if (gui != null) {
+                gui.updatePatientArrival((int)currentTime);
+                gui.updateCategoryAssignment((int)currentTime, category);
+            }
         }
 
-        // Process patients in queues
-        for (int i = 0; i < queues.length; i++) {
-            PatientQueue queue = queues[i];
+        // Process queues
+        for (PatientQueue queue : queues) {
             if (!queue.isEmpty()) {
                 Patient patient = queue.peek();
-
-                // Assign staff if available
-                for (Staff s : staff) {
-                    if (s.canTakePatient()) {
-                        s.assignPatient(patient, currentTime);
+                
+                // Try to find an empty bed first
+                Bed availableBed = findEmptyBed(patient.getCategory());
+                if (availableBed != null) {
+                    // Found a bed, now assign staff
+                    Staff availableStaff = findAvailableStaff(patient.getCategory());
+                    if (availableStaff != null) {
+                        // We have both bed and staff, proceed with assignment
+                        patient.setWaitTime(currentTime - patient.getArrivalTime());  // Record wait time
+                        availableBed.assignPatient(patient, currentTime);
+                        availableStaff.assignPatient(patient, currentTime);
                         queue.dequeue();
-                        break;
+                        
+                        // Record metrics for this patient
+                        metrics.recordPatient(patient);
+                        
+                        // Update GUI with assignments
+                        if (gui != null) {
+                            gui.updateBedAssignment(patient.getId(), availableBed.getId());
+                            gui.updateStaffAssignment(patient.getId(), 
+                                                    availableStaff.getId(), 
+                                                    availableStaff.getRole());
+                        }
                     }
                 }
             }
         }
 
-        // Update staff work and release patients
-        for (Staff s : staff) {
-            for (int i = 0; i < s.getPatientCount(); i++) {
-                Patient patient = s.assignedPatients[i];
-                if (currentTime >= patient.getArrivalTime() + patient.getTreatmentTime()) {
-                    metrics.recordPatient(patient);
-                    s.releasePatient(patient, currentTime);
+        // Process releases
+        processReleases();
+        updateTreatments();
+        updateGUIStatus();
+    }
+    
+    private Staff findAvailableStaff(int patientCategory) {
+        String requiredRole;
+        if (patientCategory <= 2)           requiredRole = "Consultant";
+        else if (patientCategory == 3)      requiredRole = "Senior Resident";
+        else                              requiredRole = "Junior Resident";
+        
+        for (Staff staff : this.staff)
+            if (staff.getRole().equals(requiredRole) && staff.canTakePatient())
+                return staff;
+        return null;
+    }
+    
+    private void startDiagnosticStudies(Patient patient) {
+        double currentStudyTime = currentTime;
+        for (DiagnosticStudy study : patient.getStudies()) {
+            study.start(currentStudyTime);
+            currentStudyTime += study.getDuration(); //we add all the studies' durations since they were performed sequentially
+        }
+    }
+    
+    private void processReleases() {
+        for (Bed bed : beds)
+            if (bed.isOccupied()) {
+                Patient patient = bed.getCurrentPatient();
+                if (currentTime >= patient.getArrivalTime() + patient.getTotalTreatmentTime()) {
+                    patient.setDischargeTime(currentTime);  //we set this patient's discharge time before releasing him
+                    releasePatient(bed);
+                    metrics.updatePatientCompletion(patient); //updating final metrics of this patient
                 }
             }
+    }
+    
+    public double getCurrentTime() {
+    	return currentTime;
+    }
+    
+    public void updateGUIStatus() {
+        if (gui != null) {
+            // Update patient queues
+            int[] waitingPatients = new int[MAX_QUEUES];
+            for (int i = 0; i < queues.size(); i++)
+                waitingPatients[i] = queues.get(i).getSize();
+            
+            //updating all the statuses in GUI
+            gui.updatePatientStatus(waitingPatients);
+            gui.updateBedStatus(beds);
+            gui.updateStaffStatus(staff);
         }
     }
 }

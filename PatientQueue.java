@@ -1,47 +1,32 @@
-package trial2claude;
+package trial3;
+
+import java.util.ArrayList;
 
 public class PatientQueue {
-    private Patient[] patients;
-    private int front;
-    private int rear;
-    private int size;
-    private final int capacity;
+    private ArrayList<Patient> patients;
     private final int priority;
     
-    public PatientQueue(int priority, int capacity) {
+    public PatientQueue(int priority) {
         this.priority = priority;
-        this.capacity = capacity;
-        this.patients = new Patient[capacity];
-        this.front = 0;
-        this.rear = -1;
-        this.size = 0;
+        this.patients = new ArrayList<>();
     }
     
     public void enqueue(Patient patient) {
-        if (size == capacity) {
-            throw new IllegalStateException("Queue is full");
-        }
-        rear = (rear + 1) % capacity;
-        patients[rear] = patient;
-        size++;
+        patients.add(patient);
     }
     
     public Patient dequeue() {
-        if (size == 0) {
+        if (patients.isEmpty()) {
             return null;
         }
-        Patient patient = patients[front];
-        front = (front + 1) % capacity;
-        size--;
-        return patient;
+        return patients.remove(0);
     }
     
     public Patient peek() {
-        return size == 0 ? null : patients[front];
+        return patients.isEmpty() ? null : patients.get(0);
     }
     
-    public boolean isEmpty() { return size == 0; }
-    public boolean isFull() { return size == capacity; }
-    public int getSize() { return size; }
+    public boolean isEmpty() { return patients.isEmpty(); }
+    public int getSize() { return patients.size(); }
     public int getPriority() { return priority; }
 }
