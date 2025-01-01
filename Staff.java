@@ -1,16 +1,16 @@
-package trial3;
+package trialCLASSES;
 
 import java.util.ArrayList;
 
 public class Staff {
-    private String id;
+    private int id;
     private String role;
     private int maxPatients;
     private ArrayList<Patient> assignedPatients;
     private double totalWorkTime;
     private double lastWorkStartTime;
     
-    public Staff(String id, String role, int maxPatients) {
+    public Staff(int id, String role, int maxPatients) {
         this.id = id;
         this.role = role;
         this.maxPatients = maxPatients;
@@ -32,7 +32,7 @@ public class Staff {
         }
     }
     
-    public void releasePatient(Patient patient, double currentTime) {
+    public void removePatientFromStaff(Patient patient, double currentTime) {
         assignedPatients.remove(patient);
         if (assignedPatients.isEmpty()) {
             totalWorkTime += (currentTime - lastWorkStartTime);
@@ -44,8 +44,7 @@ public class Staff {
         return totalWorkTime / totalTime;
     }
     
-    // Getters
-    public String getId() { return id; }
+    public int getId() { return id; }
     public String getRole() { return role; }
     public int getPatientCount() { return assignedPatients.size(); }
     public ArrayList<Patient> getAssignedPatients() { return assignedPatients; }

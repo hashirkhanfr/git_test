@@ -1,10 +1,10 @@
-package trial3;
-
+package trialCLASSES;
 import java.util.ArrayList;
 
 public class Patient {
     private int id;
     private int category;
+    private String disease;
     private double arrivalTime;
     private double waitTime;
     private double treatmentTime;
@@ -14,34 +14,32 @@ public class Patient {
     private boolean isPreempted;
     private ArrayList<DiagnosticStudy> studies;
     
-    public Patient(int id, int category, double arrivalTime) {
+    public Patient(int id, int category, double arrivalTime,String disease) {
         this.id = id;
         this.category = category;
         this.arrivalTime = arrivalTime;
         this.studies = new ArrayList<>();
         this.assignedBedId = 0;
         this.isPreempted = false;
+        this.disease = disease;
+       
+        this.treatmentTime = Probability.generateTreatmentTime(arrivalTime, category); //treatment time using Pearson VI distribution
+        this.postTreatmentTime = Probability.generatePostTreatmentTime(arrivalTime);  //post-treatment time using exponential distribution
         
-        // Generate treatment time using Pearson VI distribution
-        this.treatmentTime = Probability.generateTreatmentTime(arrivalTime, category);
+        if (category == 1)          waitTime = 0; 		  // Immediate (0 min)
+        else if (category == 2)     waitTime = 10 * 60;   // 10 minutes
+        else if (category == 3)     waitTime = 30 * 60;   // 30 minutes
+        else if (category == 4)     waitTime = 60 * 60;   // 60 minutes
+        else if (category == 5)     waitTime = 120 * 60;  // 120 minutes
+        else                        waitTime = 0;         //default for unexpected
         
-        // Generate post-treatment time using exponential distribution
-        this.postTreatmentTime = Probability.generatePostTreatmentTime(arrivalTime);
-        
-        // Calculate recommended wait time based on category
-        // Category 1: Immediate (0 min)
-        // Category 2: 10 min
-        // Category 3: 30 min
-        // Category 4: 60 min
-        // Category 5: 120 min
-        this.waitTime = (category == 1) ? 0 : Math.pow(2, category - 1) * 600; // in seconds
     }
     
     public void addDiagnosticStudy(String type, double duration) {
         studies.add(new DiagnosticStudy(type, duration));
     }
     
-    // Getters
+    //getters
     public int getId() { return id; }
     public int getCategory() { return category; }
     public double getArrivalTime() { return arrivalTime; }
@@ -54,7 +52,7 @@ public class Patient {
     public double getTotalTreatmentTime() { return treatmentTime + postTreatmentTime; }
     public double getDischargeTime() { return dischargeTime; }
     
-    // Setters
+    //setters
     public void setWaitTime(double waitTime) { this.waitTime = waitTime; }
     public void setDischargeTime(double time) { this.dischargeTime = time; }
     public void setAssignedBedId(int id) { this.assignedBedId = id; }

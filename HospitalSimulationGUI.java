@@ -1,4 +1,4 @@
-package trial3;
+package trialCLASSES;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,6 +14,7 @@ public class HospitalSimulationGUI {
     private JTextField categoryAssignmentField;
     private JTextField staffAssignmentField;
     private JTextField bedAssignmentField;
+    private JTextField diseaseAssignmentField;
     private JTextArea bedStatusArea;
     private JTextField bedSummaryField;
     private JTextArea staffStatusArea;
@@ -119,13 +120,22 @@ public class HospitalSimulationGUI {
         progressBar.setBounds(10, 60, 270, 30);
         progressBar.setStringPainted(true);
         controlPanel.add(progressBar);
-
+        
         // Patient Updates Section (Middle Left)
         JPanel updatesPanel = new JPanel();
         updatesPanel.setBorder(BorderFactory.createTitledBorder("Patient Updates"));
-        updatesPanel.setBounds(20, 217, 652, 200);
+        updatesPanel.setBounds(20, 217, 652, 214);
         updatesPanel.setLayout(null);
         frame.getContentPane().add(updatesPanel);
+        
+        JLabel diseaseAssignmentLabel = new JLabel("Disease Assignment:");
+        diseaseAssignmentLabel.setBounds(10, 180, 150, 25);
+        updatesPanel.add(diseaseAssignmentLabel);
+
+        diseaseAssignmentField = new JTextField();
+        diseaseAssignmentField.setBounds(170, 180, 472, 25);
+        diseaseAssignmentField.setEditable(false);
+        updatesPanel.add(diseaseAssignmentField);
 
         // Add update fields
         JLabel patientArrivalLabel = new JLabel("Latest Arrival:");
@@ -223,7 +233,7 @@ public class HospitalSimulationGUI {
         // Results Section (Bottom Left)
         JPanel resultsPanel = new JPanel();
         resultsPanel.setBorder(BorderFactory.createTitledBorder("Simulation Results"));
-        resultsPanel.setBounds(20, 427, 652, 386);
+        resultsPanel.setBounds(20, 430, 652, 386);
         resultsPanel.setLayout(null);
         frame.getContentPane().add(resultsPanel);
 
@@ -309,7 +319,7 @@ public class HospitalSimulationGUI {
                 if (patientCount > 0) {
                     occupiedStaff++;
                 }
-                details.append(String.format("%s (%s): %d/%d patients\n", 
+                details.append(String.format("STAFF-%d (%s): %d/%d patients\n", 
                     staff.getId(), 
                     staff.getRole(), 
                     patientCount,
@@ -340,7 +350,7 @@ public class HospitalSimulationGUI {
             try {
                 hospital = new Hospital(duration, bedCount, staffCount, this);
 
-                double totalSteps = duration * 60; // Convert minutes to seconds
+                double totalSteps = duration * 600; // Convert minutes to seconds
                 double completedSteps = 0;
 
                 while (!stopSimulationFlag && completedSteps < totalSteps) {
@@ -383,10 +393,10 @@ public class HospitalSimulationGUI {
         });
     }
 
-    public void updateStaffAssignment(int patientId, String staffId, String role) {
+    public void updateStaffAssignment(int patientId, int staffId, String role) {
         SwingUtilities.invokeLater(() -> {
             staffAssignmentField.setText("Patient " + patientId + " assigned to " + role + 
-                " (" + staffId + ") at time " + String.format("%.1f", hospital.getCurrentTime()));
+                " (STAFF-" + staffId + ") at time " + String.format("%.1f", hospital.getCurrentTime()));
         });
     }
 
@@ -396,4 +406,13 @@ public class HospitalSimulationGUI {
                 " at time " + String.format("%.1f", hospital.getCurrentTime()));
         });
     }
+    
+    public void updateDiseaseAssignment(int patientId, String disease) {
+        SwingUtilities.invokeLater(() -> {
+            diseaseAssignmentField.setText("Patient " + patientId + " presenting with " + 
+                disease + " at time " + String.format("%.1f", hospital.getCurrentTime()));
+        });
+    }
+
+    
 }

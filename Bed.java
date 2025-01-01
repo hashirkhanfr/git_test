@@ -1,4 +1,4 @@
-package trial3;
+package trialCLASSES;
 
 public class Bed {
     private int id;
@@ -18,13 +18,13 @@ public class Bed {
     
     
     public void assignPatient(Patient patient, double currentTime) {
-        this.currentPatient = patient;       // assign the variable with the new patient object.
-        this.occupied = true;                    // set the occupied status
-        this.lastOccupiedStartTime = currentTime;    
+        currentPatient = patient;       // assign the variable with the new patient object.
+        occupied = true;                    // set the occupied status
+        lastOccupiedStartTime = currentTime;    
         patient.setAssignedBedId(id);
     }
     
-    public void releasePatient(double currentTime) {
+    public void clearPatientFromBed(double currentTime) {
         if (occupied) {
             totalOccupiedTime += (currentTime - lastOccupiedStartTime); //total occupied time required for calculations and GUI
             currentPatient.setAssignedBedId(0);                      // take the patient object it holds, and sets his bed id to null

@@ -1,5 +1,4 @@
-package trial3;
-
+package trialCLASSES;
 import java.util.ArrayList;
 
 public class SimulationMetrics {
@@ -37,10 +36,9 @@ public class SimulationMetrics {
         totalPatients++;
         totalWaitTime += patient.getWaitTime();
         
-        double recommendedTime = getRecommendedWaitTime(patient.getCategory());
-        if (patient.getWaitTime() <= recommendedTime * 60) {  // Convert minutes to seconds
+        double recommTime = getRecommendedWaitTime(patient.getCategory());
+        if (patient.getWaitTime() <= recommTime * 60)  //if the wait time was equal or less than recommended time, patient was seen on time
             patientsSeenOnTime++;
-        }
     }
     
     public void updatePatientCompletion(Patient patient) {
@@ -59,61 +57,51 @@ public class SimulationMetrics {
             case 3: return 30;   // 30 minutes
             case 4: return 60;   // 1 hour
             case 5: return 120;  // 2 hours
-            default: return Double.MAX_VALUE;
+            default: return 0;
         }
+    }
+
+    public String generateReport() {
+    	String report = "===================================> Simulation Results <===================================\n";
+    	report += "Simulation Duration: " + currentTime / 60.0 + " minutes\n\n";
+    	report += "Total Patients Processed: " + totalPatients + "\n";
+
+    	if (totalPatients > 0) {
+    	    report += String.format("Average Wait Time: %.1f minutes\n",(totalWaitTime / 60.0) / totalPatients);
+    	    report += String.format("Average Total Time in System: %.1f minutes\n",(totalThroughputTime / 60.0) / totalPatients);
+    	    report += String.format("Patients Seen Within Target Time: %.1f%%\n",(patientsSeenOnTime * 100.0) / totalPatients);
+    	}
+
+    	report += String.format("Total Preemptions: %d\n", totalPreemptions);
+
+    	// Category statistics
+    	report += "\n==================================> By Category Statistics <==================================\n";
+    	for (int i = 0; i < 5; i++) {
+    	    int count = categoryPatientCounts.get(i);
+    	    if (count > 0) {
+    	        double avgWait = (categoryWaitTimes.get(i) / 60.0) / count;
+    	        report += String.format(" ---------------> Category %d <---------------\n", i + 1);
+    	        report += String.format(" -- Patients: %d\n", count);
+    	        report += String.format(" -- Average Wait: %.1f minutes\n", avgWait);
+    	    }
+    	}
+
+    	double totalBedUtilization = 0;
+    	for (Bed bed : beds)
+    	    totalBedUtilization += bed.getUtilization(currentTime);
+    	double avgBedUtilization = totalBedUtilization / beds.size();
+    	report += String.format("\nAverage Bed Utilization: %.1f%%\n", avgBedUtilization * 100);
+
+    	double totalStaffUtilization = 0;
+    	for (Staff member : staff)
+    	    totalStaffUtilization += member.getUtilization(currentTime);
+    	double avgStaffUtilization = totalStaffUtilization / staff.size();
+    	report += String.format("Average Staff Utilization: %.1f%%\n", avgStaffUtilization * 100);
+
+    	return report;
     }
     
     public void setCurrentTime(double currentTime) {
         this.currentTime = currentTime;
-    }
-
-    public String generateReport() {
-        StringBuilder report = new StringBuilder();
-        report.append("======== Simulation Results =======\n");
-        report.append(String.format("Simulation Duration: %.1f minutes\n", currentTime/60.0));
-        report.append("\n");
-
-        // Patient statistics
-        report.append(String.format("Total Patients Processed: %d\n", totalPatients));
-        
-        if (totalPatients > 0) {
-            report.append(String.format("Average Wait Time: %.1f minutes\n", 
-                (totalWaitTime / 60.0) / totalPatients));
-            report.append(String.format("Average Total Time in System: %.1f minutes\n",
-                (totalThroughputTime / 60.0) / totalPatients));
-            report.append(String.format("Patients Seen Within Target Time: %.1f%%\n",
-                (patientsSeenOnTime * 100.0) / totalPatients));
-        }
-        
-        report.append(String.format("Total Preemptions: %d\n", totalPreemptions));
-        
-        // Category statistics
-        report.append("\n-----------------> By Category Statistics <-----------------\n");
-        for (int i = 0; i < 5; i++) {
-            int count = categoryPatientCounts.get(i);
-            if (count > 0) {
-                double avgWait = (categoryWaitTimes.get(i) / 60.0) / count;
-                report.append(String.format(" ---------> Category %d <---------\n", i + 1));
-                report.append(String.format(" -- Patients: %d\n", count));
-                report.append(String.format(" -- Average Wait: %.1f minutes\n", avgWait));
-            }
-        }
-
-        // Resource utilization statistics
-        double totalBedUtilization = 0;
-        for (Bed bed : beds) {
-            totalBedUtilization += bed.getUtilization(currentTime);
-        }
-        double avgBedUtilization = totalBedUtilization / beds.size();
-        report.append(String.format("\nAverage Bed Utilization: %.1f%%\n", avgBedUtilization * 100));
-        
-        double totalStaffUtilization = 0;
-        for (Staff member : staff) {
-            totalStaffUtilization += member.getUtilization(currentTime);
-        }
-        double avgStaffUtilization = totalStaffUtilization / staff.size();
-        report.append(String.format("Average Staff Utilization: %.1f%%\n", avgStaffUtilization * 100));
-        
-        return report.toString();
     }
 }

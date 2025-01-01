@@ -1,13 +1,6 @@
-package trial3;
+package trialCLASSES;
 
 public class Probability {
-    
-    // Weibull distribution density calculation for interarrival times
-    public static double weibull(double x, double alpha, double beta) {
-        if (x < 0) return 0.0;
-        double exponent = -Math.pow(x / alpha, beta);
-        return (beta / alpha) * Math.pow(x / alpha, beta - 1) * Math.exp(exponent);
-    }
     
     // Beta function implementation for Pearson VI distribution
     public static double betaFunction(double p, double q) {
@@ -29,13 +22,6 @@ public class Probability {
         return temp + Math.log(stp * ser / x);
     }
     
-    // Pearson VI density calculation for treatment times
-    public static double pearsonVI(double x, double beta, double alpha, double p, double q) {
-        if (x < 0) return 0.0;
-        double betaVal = betaFunction(p, q);
-        return (Math.pow(x, alpha - 1) / Math.pow(beta, alpha) / betaVal) *
-               Math.pow(1 + (x / beta), -(p + q));
-    }
     
     public static double pearsonVI(double x, double beta, double p, double q) {
         if (x <= 0) {
@@ -68,17 +54,17 @@ public class Probability {
         // Adjust parameters based on category
         switch(category) {
             case 1: // Critical cases need longer treatment
-                beta *= 1.5;
+                beta *= 1.2;
                 break;
             case 2:
-                beta *= 1.2;
+                beta *= 1.1;
                 break;
             case 3:
                 // Use default parameters
                 break;
             case 4:
             case 5: // Minor cases need less time
-                beta *= 0.7;
+                beta *= 0.6;
                 break;
         }
         

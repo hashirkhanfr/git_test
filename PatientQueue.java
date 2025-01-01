@@ -1,4 +1,4 @@
-package trial3;
+package trialCLASSES;
 
 import java.util.ArrayList;
 
@@ -19,10 +19,10 @@ public class PatientQueue {
         if (patients.isEmpty()) {
             return null;
         }
-        return patients.remove(0);
+        return patients.remove(0); 
     }
     
-    public Patient peek() {
+    public Patient viewNextPatient() {
         return patients.isEmpty() ? null : patients.get(0);
     }
     
