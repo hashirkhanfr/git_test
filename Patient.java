@@ -1,7 +1,8 @@
-package trialCLASSES;
+package COPY;
 import java.util.ArrayList;
 
 public class Patient {
+	private static int patientCounter = 1;
     private int id;
     private int category;
     private String disease;
@@ -14,8 +15,8 @@ public class Patient {
     private boolean isPreempted;
     private ArrayList<DiagnosticStudy> studies;
     
-    public Patient(int id, int category, double arrivalTime,String disease) {
-        this.id = id;
+    public Patient(int category, double arrivalTime,String disease) {
+    	this.id = patientCounter++;
         this.category = category;
         this.arrivalTime = arrivalTime;
         this.studies = new ArrayList<>();
@@ -57,5 +58,7 @@ public class Patient {
     public void setDischargeTime(double time) { this.dischargeTime = time; }
     public void setAssignedBedId(int id) { this.assignedBedId = id; }
     public void setPreempted(boolean preempted) { this.isPreempted = preempted; }
+
+	public String getDisease() { return disease; }
     
 }

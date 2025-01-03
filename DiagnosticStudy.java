@@ -1,4 +1,4 @@
-package trialCLASSES;
+package COPY;
 
 public class DiagnosticStudy {
     private String type;

@@ -1,4 +1,4 @@
-package trialCLASSES;
+package COPY;
 
 //New class to represent diseases
 public class Disease{

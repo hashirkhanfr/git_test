@@ -1,8 +1,8 @@
-package trialCLASSES;
+package COPY;
 
 public class Probability {
     
-    // Beta function implementation for Pearson VI distribution
+    //beta function implementation for Pearson VI distribution
     public static double betaFunction(double p, double q) {
         return Math.exp(gammaLn(p) + gammaLn(q) - gammaLn(p + q));
     }
@@ -37,14 +37,14 @@ public class Probability {
         return numerator / denominator;
     }
     
-    // Post-discharge time density (Exponential distribution)
+    //post-discharge time density (Exponential distribution)
     public static double pddt(double x, double mean) {
         if (x < 0) return 0.0;
         double mu = 1.0 / mean; 
         return mu * Math.exp(-mu * x);
     }
     
-    // Generate random treatment time using Pearson VI distribution
+    //generate random treatment time using Pearson VI distribution
     public static double generateTreatmentTime(double currentTime, int category) {
         // Base parameters from the formula
         double beta = 355;   // Scale parameter
@@ -68,7 +68,7 @@ public class Probability {
                 break;
         }
         
-        // Use rejection sampling to generate random value
+        //use rejection sampling to generate random value
         double maxY = pearsonVI(beta, beta, p, q);
         while(true) {
             double x = Math.random() * beta * 3; // Range: [0, 3*beta]
@@ -79,13 +79,13 @@ public class Probability {
         }
     }
     
-    // Generate random post-treatment time
+    //generate random post-treatment time
     public static double generatePostTreatmentTime(double currentTime) {
         double mean = 156; // From C++ implementation
         return -mean * Math.log(1 - Math.random()); // Inverse transform sampling
     }
     
-    // Generate inter arrival time using Weibull distribution
+    //generate inter arrival time using Weibull distribution
     public static double generateInterarrivalTime(double currentTime) {
         double alpha = 180; // Scale parameter
         double beta = 0.914;      // Shape parameter

@@ -1,4 +1,4 @@
-package trialCLASSES;
+package COPY;
 
 public class Bed {
     private int id;

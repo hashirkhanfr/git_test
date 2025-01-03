@@ -1,11 +1,10 @@
-package trialCLASSES;
+package COPY;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 
 public class HospitalSimulationGUI {
-    // Existing fields
     private JFrame frame;
     private JTextField simulationDurationField;
     private JTextField bedCountField;
@@ -23,9 +22,7 @@ public class HospitalSimulationGUI {
     private JButton startSimulationButton;
     private JButton stopSimulationButton;
     private JProgressBar progressBar;
-    
 
-    // New fields for patient status
     private JTextArea patientStatusArea;
     private JTextField patientSummaryField;
 
@@ -48,10 +45,9 @@ public class HospitalSimulationGUI {
     }
 
     private void initialize() {
-        // Create frame to be maximized
     	frame = new JFrame("Hospital ED Simulation");
-    	frame.setSize(1024, 768); // Fixed size for WindowBuilder compatibility
-    	frame.setLocationRelativeTo(null); // Center frame on screen
+    	frame.setSize(1024, 768); // fixed size for WindowBuilder compatibility
+    	frame.setLocationRelativeTo(null); //center frame on screen
     	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     	frame.getContentPane().setLayout(null);
     	
@@ -63,15 +59,12 @@ public class HospitalSimulationGUI {
         titleLabel.setForeground(Color.WHITE);
         headerPanel.add(titleLabel);
         frame.getContentPane().add(headerPanel);
-
-        // Input Parameters Section (Top Left)
         JPanel inputPanel = new JPanel();
         inputPanel.setBorder(BorderFactory.createTitledBorder("Simulation Parameters"));
-        inputPanel.setBounds(20, 87, 350, 120);
+        inputPanel.setBounds(20, 54, 350, 120);
         inputPanel.setLayout(null);
         frame.getContentPane().add(inputPanel);
-
-        // Add input components
+        
         JLabel durationLabel = new JLabel("Simulation Duration (minutes):");
         durationLabel.setBounds(10, 20, 200, 25);
         inputPanel.add(durationLabel);
@@ -99,7 +92,7 @@ public class HospitalSimulationGUI {
         // Controls Section (Top Center)
         JPanel controlPanel = new JPanel();
         controlPanel.setBorder(BorderFactory.createTitledBorder("Controls"));
-        controlPanel.setBounds(380, 87, 292, 120);
+        controlPanel.setBounds(380, 54, 292, 120);
         controlPanel.setLayout(null);
         frame.getContentPane().add(controlPanel);
 
@@ -121,10 +114,10 @@ public class HospitalSimulationGUI {
         progressBar.setStringPainted(true);
         controlPanel.add(progressBar);
         
-        // Patient Updates Section (Middle Left)
+        //Patient Updates Section (Middle Left)
         JPanel updatesPanel = new JPanel();
         updatesPanel.setBorder(BorderFactory.createTitledBorder("Patient Updates"));
-        updatesPanel.setBounds(20, 217, 652, 214);
+        updatesPanel.setBounds(20, 184, 652, 214);
         updatesPanel.setLayout(null);
         frame.getContentPane().add(updatesPanel);
         
@@ -137,7 +130,6 @@ public class HospitalSimulationGUI {
         diseaseAssignmentField.setEditable(false);
         updatesPanel.add(diseaseAssignmentField);
 
-        // Add update fields
         JLabel patientArrivalLabel = new JLabel("Latest Arrival:");
         patientArrivalLabel.setBounds(10, 20, 150, 25);
         updatesPanel.add(patientArrivalLabel);
@@ -178,7 +170,7 @@ public class HospitalSimulationGUI {
         // Bed Status Panel (Top Right)
         JPanel bedPanel = new JPanel();
         bedPanel.setBorder(BorderFactory.createTitledBorder("Bed Status"));
-        bedPanel.setBounds(682, 87, 700, 250);
+        bedPanel.setBounds(682, 54, 700, 250);
         bedPanel.setLayout(null);
         frame.getContentPane().add(bedPanel);
 
@@ -193,10 +185,9 @@ public class HospitalSimulationGUI {
         bedScrollPane.setBounds(10, 50, 680, 190);
         bedPanel.add(bedScrollPane);
 
-        // Staff Status Panel (Middle Right)
         JPanel staffPanel = new JPanel();
         staffPanel.setBorder(BorderFactory.createTitledBorder("Staff Status"));
-        staffPanel.setBounds(682, 342, 700, 250);
+        staffPanel.setBounds(682, 313, 700, 250);
         staffPanel.setLayout(null);
         frame.getContentPane().add(staffPanel);
 
@@ -211,10 +202,9 @@ public class HospitalSimulationGUI {
         staffScrollPane.setBounds(10, 50, 680, 190);
         staffPanel.add(staffScrollPane);
 
-        // Patient Status Panel (Bottom Right)
         JPanel patientPanel = new JPanel();
         patientPanel.setBorder(BorderFactory.createTitledBorder("Patient Status"));
-        patientPanel.setBounds(682, 602, 700, 180);
+        patientPanel.setBounds(682, 573, 700, 180);
         patientPanel.setLayout(null);
         frame.getContentPane().add(patientPanel);
 
@@ -230,10 +220,9 @@ public class HospitalSimulationGUI {
         patientScrollPane.setBounds(10, 50, 680, 100);
         patientPanel.add(patientScrollPane);
 
-        // Results Section (Bottom Left)
         JPanel resultsPanel = new JPanel();
         resultsPanel.setBorder(BorderFactory.createTitledBorder("Simulation Results"));
-        resultsPanel.setBounds(20, 430, 652, 386);
+        resultsPanel.setBounds(20, 403, 652, 386);
         resultsPanel.setLayout(null);
         frame.getContentPane().add(resultsPanel);
 
@@ -246,24 +235,6 @@ public class HospitalSimulationGUI {
         setupActionListeners();
     }
 
-    // Add new method to update patient status using arrays
-    public void updatePatientStatus(int[] waitingPatients) {
-        SwingUtilities.invokeLater(() -> {
-            int totalWaiting = 0;
-            StringBuilder details = new StringBuilder();
-            
-            // Calculate total and build status text
-            for (int i = 0; i < waitingPatients.length; i++) {
-                totalWaiting += waitingPatients[i];
-                details.append(String.format("Category %d: %d waiting\n", i + 1, waitingPatients[i]));
-            }
-
-            patientSummaryField.setText(String.format("Total Waiting Patients: %d", totalWaiting));
-            patientStatusArea.setText(details.toString());
-        });
-    }
-
-    // Existing methods remain the same
     private void setupActionListeners() {
         startSimulationButton.addActionListener(e -> {
             try {
@@ -274,9 +245,7 @@ public class HospitalSimulationGUI {
                 startSimulation(duration, bedCount, staffCount);
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(frame,
-                    "Please enter valid numbers for all fields.",
-                    "Input Error",
-                    JOptionPane.ERROR_MESSAGE);
+                    "Please enter valid numbers for all fields.","Input Error",JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -291,13 +260,13 @@ public class HospitalSimulationGUI {
         SwingUtilities.invokeLater(() -> {
             int totalBeds = beds.size();
             int occupiedBeds = 0;
-            StringBuilder details = new StringBuilder();
+            String details = "";
 
             for (Bed bed : beds) {
                 if (bed.isOccupied()) {
                     occupiedBeds++;
                 }
-                details.append(String.format("BED-%d (%s): %s\n", 
+                details += (String.format("BED-%d (%s): %s\n", 
                     bed.getId(), 
                     bed.getType(),
                     bed.isOccupied() ? "Occupied by Patient " + bed.getCurrentPatient().getId() : "Available"));
@@ -312,14 +281,14 @@ public class HospitalSimulationGUI {
         SwingUtilities.invokeLater(() -> {
             int totalStaff = staffMembers.size();
             int occupiedStaff = 0;
-            StringBuilder details = new StringBuilder();
+            String details = "";
 
             for (Staff staff : staffMembers) {
                 int patientCount = staff.getPatientCount();
                 if (patientCount > 0) {
                     occupiedStaff++;
                 }
-                details.append(String.format("STAFF-%d (%s): %d/%d patients\n", 
+                details +=(String.format("STAFF-%d (%s): %d/%d patients\n", 
                     staff.getId(), 
                     staff.getRole(), 
                     patientCount,
@@ -348,9 +317,9 @@ public class HospitalSimulationGUI {
 
         new Thread(() -> {
             try {
-                hospital = new Hospital(duration, bedCount, staffCount, this);
+                hospital = new Hospital(bedCount, staffCount, this);
 
-                double totalSteps = duration * 600; // Convert minutes to seconds
+                double totalSteps = duration * 600; // Convert that milliseconds to second instead
                 double completedSteps = 0;
 
                 while (!stopSimulationFlag && completedSteps < totalSteps) {
@@ -362,21 +331,37 @@ public class HospitalSimulationGUI {
                         progressBar.setValue((int) progress);
                     });
 
-                    Thread.sleep(100); // Simulate 1-second steps
+                    Thread.sleep(100); //1 second steps
                 }
 
                 SwingUtilities.invokeLater(() -> {
                     resultArea.setText("Simulation completed.\n\n" + hospital.generateReport());
                     stopSimulationButton.setEnabled(false);
                 });
-            } catch (Exception ex) {
+            } catch (Exception e) {
                 SwingUtilities.invokeLater(() -> {
-                    resultArea.setText("Error during simulation: " + ex.getMessage());
+                    resultArea.setText("Error during simulation: " + e.getMessage());
                     startSimulationButton.setEnabled(false);
                     stopSimulationButton.setEnabled(false);
                 });
             }
         }).start();
+    }
+    
+    public void updatePatientStatus(int[] waitingPatients) {
+        SwingUtilities.invokeLater(() -> {
+            int totalWaiting = 0;
+            String details ="";
+            
+            // Calculate total and build status text
+            for (int i = 0; i < waitingPatients.length; i++) {
+                totalWaiting += waitingPatients[i];
+                details += (String.format("Category %d: %d waiting\n", i + 1, waitingPatients[i]));
+            }
+
+            patientSummaryField.setText(String.format("Total Waiting Patients: %d", totalWaiting));
+            patientStatusArea.setText(details.toString());
+        });
     }
 
     public void updatePatientArrival(int patientId) {
